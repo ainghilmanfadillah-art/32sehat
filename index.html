@@ -97,6 +97,10 @@
                 </div>
                 <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importJSONBackup(event)">
                 <input type="file" id="import-csv-input" accept=".csv" class="hidden" onchange="importCSVData(event)">
+                <button id="install-app-btn" class="hidden px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Install App</span>
+                </button>
                 <button onclick="exportToCSV()" class="px-3 py-1.5 text-xs bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition flex items-center gap-1.5 shadow">
                     <i class="fa-solid fa-file-excel"></i>
                     <span>Ekspor CSV</span>
@@ -119,6 +123,10 @@
             <button onclick="switchTab('students')" id="tab-students" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-users"></i>
                 <span>Daftar Siswa (<span id="student-count-badge">0</span>)</span>
+            </button>
+            <button onclick="switchTab('data')" id="tab-data" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-file-export"></i>
+                <span>Data</span>
             </button>
             <button onclick="switchTab('guide')" id="tab-guide" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-book-bookmark"></i>
@@ -441,7 +449,89 @@
             </div>
         </section>
 
-        <!-- VIEW 4: NORMA TKJI GUIDE -->
+        <!-- VIEW 4: DATA IMPORT / EXPORT -->
+        <section id="view-data" class="tab-view hidden max-w-5xl mx-auto space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-file-export text-brand-600"></i>
+                            Ekspor & Impor Data
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Unduh format Excel, impor file CSV, atau backup data dalam format JSON.</p>
+                    </div>
+                    <button onclick="downloadBlankTemplateCSV()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i>
+                        Download Format Kosong
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                            Format Excel / CSV
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4">Gunakan file template ini untuk mengisi data siswa di Microsoft Excel lalu simpan sebagai CSV.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="downloadBlankTemplateCSV()" class="px-3 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition">
+                                <i class="fa-solid fa-file-arrow-down mr-1"></i> Download Template
+                            </button>
+                            <button onclick="exportToCSV()" class="px-3 py-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition">
+                                <i class="fa-solid fa-file-export mr-1"></i> Ekspor CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                            <i class="fa-solid fa-file-import text-sky-600"></i>
+                            Impor Data
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4">Upload file CSV yang sudah diisi di Excel atau file backup JSON milik aplikasi.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="document.getElementById('import-csv-input').click()" class="px-3 py-2 text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition">
+                                <i class="fa-solid fa-file-import mr-1"></i> Impor CSV
+                            </button>
+                            <button onclick="document.getElementById('import-file-input').click()" class="px-3 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition">
+                                <i class="fa-solid fa-upload mr-1"></i> Impor JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info text-amber-600 mt-1"></i>
+                        <div class="text-sm text-amber-900">
+                            <p class="font-semibold mb-1">Petunjuk singkat</p>
+                            <ul class="list-disc pl-5 space-y-1 text-xs text-amber-800">
+                                <li>Isi template Excel sesuai kolom yang tersedia.</li>
+                                <li>Simpan file dalam format CSV sebelum diimpor kembali.</li>
+                                <li>Gunakan backup JSON untuk cadangan data lengkap aplikasi.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-t border-slate-200 pt-5">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-database text-slate-600"></i>
+                        Backup & Restore Data
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="exportJSONBackup()" class="px-3 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition">
+                            <i class="fa-solid fa-download mr-1"></i> Cadangkan JSON
+                        </button>
+                        <button onclick="document.getElementById('import-file-input').click()" class="px-3 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition">
+                            <i class="fa-solid fa-upload mr-1"></i> Pulihkan JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 5: NORMA TKJI GUIDE -->
         <section id="view-guide" class="tab-view hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
                 <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -1346,6 +1436,42 @@
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
         }
+
+        let deferredPrompt = null;
+
+        const installBtn = document.getElementById('install-app-btn');
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredPrompt = event;
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+            }
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    showToast('Instalasi tidak tersedia di browser ini. Gunakan menu browser “Install app”.', 'rose');
+                    return;
+                }
+
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast('Aplikasi sedang dipasang...');
+                }
+                deferredPrompt = null;
+                installBtn.classList.add('hidden');
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            if (installBtn) {
+                installBtn.classList.add('hidden');
+            }
+            showToast('Aplikasi berhasil dipasang!');
+        });
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
