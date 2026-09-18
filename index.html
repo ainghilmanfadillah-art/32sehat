@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Aplikasi Pencatatan Kebugaran Jasmani Siswa 32SEHAT! berbasis Standar TKJI.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>32SEHAT! - Pencatatan Kebugaran Jasmani Siswa</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        /* Hide scrollbars for clean UI on mobile */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20 md:pb-6">
+
+    <!-- Top Header Bar -->
+    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-lg font-bold text-xl">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">32SEHAT!</h1>
+                    <p class="text-xs text-slate-400">Pencatatan Kebugaran Jasmani Siswa</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="loadSampleData()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span class="hidden sm:inline">Isi Contoh Data</span>
+                </button>
+                <div class="relative group">
+                    <button class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-database text-blue-400"></i>
+                        <span class="hidden sm:inline">Kelola Data</span>
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </button>
+                    <div class="absolute right-0 mt-1 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl hidden group-hover:block z-50 p-1 text-xs">
+                        <button onclick="exportJSONBackup()" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-700 rounded-lg flex items-center gap-2">
+                            <i class="fa-solid fa-download text-emerald-400"></i> Cadangkan (JSON)
+                        </button>
+                        <button onclick="document.getElementById('import-file-input').click()" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-700 rounded-lg flex items-center gap-2">
+                            <i class="fa-solid fa-upload text-sky-400"></i> Pulihkan Data
+                        </button>
+                        <hr class="border-slate-700 my-1">
+                        <button onclick="openConfirmModal()" class="w-full text-left px-3 py-2 text-rose-300 hover:bg-rose-900/50 rounded-lg flex items-center gap-2">
+                            <i class="fa-solid fa-trash"></i> Hapus Semua Data
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importJSONBackup(event)">
+                <button onclick="exportToCSV()" class="px-3 py-1.5 text-xs bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Ekspor CSV</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs for Mobile & Desktop -->
+    <nav class="bg-white border-b border-slate-200 sticky top-[60px] z-20 shadow-sm">
+        <div class="max-w-7xl mx-auto px-2 flex justify-around md:justify-start md:space-x-4 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-brand-600 text-brand-600 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('input')" id="tab-input" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>Input Data Tes</span>
+            </button>
+            <button onclick="switchTab('students')" id="tab-students" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-users"></i>
+                <span>Daftar Siswa (<span id="student-count-badge">0</span>)</span>
+            </button>
+            <button onclick="switchTab('guide')" id="tab-guide" class="nav-tab py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>Norma TKJI</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="tab-view space-y-6">
+            <!-- Summary Stats Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Siswa</p>
+                        <p id="stat-total-students" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Kebugaran Baik+</p>
+                        <p id="stat-good-fitness" class="text-2xl font-extrabold text-emerald-600 mt-1">0%</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-dumbbell"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Rata-Rata BMI</p>
+                        <p id="stat-avg-bmi" class="text-2xl font-extrabold text-indigo-600 mt-1">-</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-weight-scale"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Perlu Perhatian</p>
+                        <p id="stat-low-fitness" class="text-2xl font-extrabold text-rose-500 mt-1">0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Fitness Level Chart -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 text-base mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-brand-600"></i>
+                        Distribusi Tingkat Kebugaran (TKJI)
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">Pengelompokan siswa berdasarkan skor tes kebugaran</p>
+                    <div class="relative h-64">
+                        <canvas id="fitnessChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- BMI Distribution Chart -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 text-base mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-600"></i>
+                        Distribusi Status Gizi (BMI / IMT)
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">Klasifikasi berat badan berbanding tinggi badan siswa</p>
+                    <div class="relative h-64">
+                        <canvas id="bmiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Banner -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="space-y-1 text-center md:text-left">
+                    <h4 class="text-lg font-bold">Siap Mengukur Kebugaran Siswa Hari Ini?</h4>
+                    <p class="text-sm text-slate-300">Gunakan form input instan untuk memasukkan data lari, push-up, sit-up, dan lompatan siswa.</p>
+                </div>
+                <button onclick="switchTab('input')" class="w-full md:w-auto px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition shadow-md whitespace-nowrap flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Input Data Baru</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 2: INPUT DATA FORM -->
+        <section id="view-input" class="tab-view hidden max-w-3xl mx-auto">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-user text-brand-600"></i>
+                        Form Hasil Tes Kebugaran Siswa
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">Isi identitas siswa dan hasil pengukuran komponen tes kebugaran jasmani.</p>
+                </div>
+
+                <form id="fitness-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    <!-- Identitas Siswa -->
+                    <div class="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-200/60">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-slate-500"></i>
+                            Identitas Siswa
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Siswa *</label>
+                                <input type="text" id="input-nama" required placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">NISN / ID Siswa</label>
+                                <input type="text" id="input-nisn" placeholder="Contoh: 0081234567" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas *</label>
+                                <input type="text" id="input-kelas" required placeholder="Contoh: 8A / 10-IPA-1" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin *</label>
+                                    <select id="input-jk" required onchange="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                        <option value="L">Laki-laki</option>
+                                        <option value="P">Perempuan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Usia (Thn) *</label>
+                                    <select id="input-usia" required onchange="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                        <option value="12">10-12 Thn</option>
+                                        <option value="14" selected>13-15 Thn</option>
+                                        <option value="17">16-19 Thn</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Antropometri (BMI) -->
+                    <div class="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-200/60">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-ruler-vertical text-slate-500"></i>
+                                Antropometri & Indeks Massa Tubuh
+                            </span>
+                            <span id="live-bmi-badge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 text-slate-700">BMI: -</span>
+                        </h3>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Tinggi Badan (cm) *</label>
+                                <input type="number" step="0.1" id="input-tb" required placeholder="165" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Berat Badan (kg) *</label>
+                                <input type="number" step="0.1" id="input-bb" required placeholder="55" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Komponen Tes TKJI -->
+                    <div class="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-200/60">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-stopwatch text-slate-500"></i>
+                                Item Tes Kebugaran (TKJI)
+                            </span>
+                            <span id="live-tkji-badge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 text-slate-700">Kategori: -</span>
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 1. Lari Cepat -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">1. Lari Cepat 60m (Detik)</label>
+                                <div class="relative">
+                                    <input type="number" step="0.01" id="input-lari60" placeholder="cth: 9.2" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <span class="absolute right-3 top-2.5 text-xs text-slate-400">detik</span>
+                                </div>
+                            </div>
+
+                            <!-- 2. Gantung Siku / Push Up -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">2. Push-Up / Gantung Siku (60s)</label>
+                                <div class="relative">
+                                    <input type="number" id="input-pushup" placeholder="cth: 25" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <span class="absolute right-3 top-2.5 text-xs text-slate-400">kali</span>
+                                </div>
+                            </div>
+
+                            <!-- 3. Sit Up -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">3. Baring Duduk / Sit-Up (60s)</label>
+                                <div class="relative">
+                                    <input type="number" id="input-situp" placeholder="cth: 30" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <span class="absolute right-3 top-2.5 text-xs text-slate-400">kali</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Loncat Tegak -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">4. Loncat Tegak / Vertical Jump</label>
+                                <div class="relative">
+                                    <input type="number" id="input-verticaljump" placeholder="cth: 45" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <span class="absolute right-3 top-2.5 text-xs text-slate-400">cm</span>
+                                </div>
+                            </div>
+
+                            <!-- 5. Lari Jauh -->
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">5. Lari Jauh (1000m / 1200m)</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="relative">
+                                        <input type="number" id="input-larijauh-min" placeholder="Menit" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                        <span class="absolute right-3 top-2.5 text-xs text-slate-400">mnt</span>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="number" id="input-larijauh-sec" placeholder="Detik" oninput="liveCalculateScore()" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                                        <span class="absolute right-3 top-2.5 text-xs text-slate-400">dtk</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date & Notes -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Tes</label>
+                            <input type="date" id="input-tanggal" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Tambahan</label>
+                            <input type="text" id="input-catatan" placeholder="Catatan kondisi fisik siswa..." class="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="flex items-center justify-end space-x-3 pt-2">
+                        <button type="button" onclick="resetForm()" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-100 transition">
+                            Reset
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition shadow-md flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Simpan Data Tes</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 3: DAFTAR SISWA -->
+        <section id="view-students" class="tab-view hidden space-y-4">
+            <!-- Filter & Search Controls -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
+                <!-- Search Input -->
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="search-input" onkeyup="renderStudentTable()" placeholder="Cari nama atau NISN siswa..." class="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <!-- Class & Category Filters -->
+                <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
+                    <select id="filter-kelas" onchange="renderStudentTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="ALL">Semua Kelas</option>
+                    </select>
+
+                    <select id="filter-kategori" onchange="renderStudentTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="ALL">Semua Kategori TKJI</option>
+                        <option value="Sangat Baik">Sangat Baik</option>
+                        <option value="Baik">Baik</option>
+                        <option value="Sedang">Sedang</option>
+                        <option value="Kurang">Kurang</option>
+                        <option value="Sangat Kurang">Sangat Kurang</option>
+                    </select>
+
+                    <button onclick="clearFilters()" class="p-2 text-xs text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 hover:bg-slate-100 transition whitespace-nowrap" title="Reset Filter">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th class="p-4">Siswa</th>
+                                <th class="p-4">Kelas</th>
+                                <th class="p-4">TB/BB (BMI)</th>
+                                <th class="p-4">Skor & Kategori TKJI</th>
+                                <th class="p-4 text-center">Rincian Hasil Tes</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rows will be injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden p-12 text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 text-2xl mb-3">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-700">Belum Ada Data Siswa</h4>
+                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Silakan tambahkan data hasil tes kebugaran siswa melalui tombol Input Data atau klik "Isi Contoh Data" di kanan atas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: NORMA TKJI GUIDE -->
+        <section id="view-guide" class="tab-view hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-book text-brand-600"></i>
+                    Acuan Klasifikasi Tes Kebugaran Jasmani Indonesia (TKJI)
+                </h2>
+                <p class="text-sm text-slate-600">
+                    Nilai akhir kebugaran dihitung dari penjumlahan nilai 5 butir tes: Lari 60m, Push-Up/Gantung Siku, Sit-Up 60s, Loncat Tegak, dan Lari Jauh.
+                </p>
+
+                <!-- Norm Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 text-xs font-bold uppercase">
+                                <th class="p-3 border border-slate-200">Jumlah Nilai</th>
+                                <th class="p-3 border border-slate-200">Kategori Kebugaran</th>
+                                <th class="p-3 border border-slate-200">Keterangan Sintesis</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="bg-emerald-50/50">
+                                <td class="p-3 border border-slate-200 font-bold text-emerald-800">22 - 25</td>
+                                <td class="p-3 border border-slate-200 font-semibold text-emerald-700">Sangat Baik (BS)</td>
+                                <td class="p-3 border border-slate-200 text-xs text-slate-600">Tingkat kebugaran fisik istimewa, sangat siap beraktivitas fisik intensif.</td>
+                            </tr>
+                            <tr class="bg-blue-50/50">
+                                <td class="p-3 border border-slate-200 font-bold text-blue-800">18 - 21</td>
+                                <td class="p-3 border border-slate-200 font-semibold text-blue-700">Baik (B)</td>
+                                <td class="p-3 border border-slate-200 text-xs text-slate-600">Kondisi kebugaran di atas rata-rata populasi sebayanya.</td>
+                            </tr>
+                            <tr class="bg-amber-50/50">
+                                <td class="p-3 border border-slate-200 font-bold text-amber-800">14 - 17</td>
+                                <td class="p-3 border border-slate-200 font-semibold text-amber-700">Sedang (S)</td>
+                                <td class="p-3 border border-slate-200 text-xs text-slate-600">Kondisi kebugaran cukupan, perlu dipertahankan atau ditingkatkan latihan teratur.</td>
+                            </tr>
+                            <tr class="bg-orange-50/50">
+                                <td class="p-3 border border-slate-200 font-bold text-orange-800">10 - 13</td>
+                                <td class="p-3 border border-slate-200 font-semibold text-orange-700">Kurang (K)</td>
+                                <td class="p-3 border border-slate-200 text-xs text-slate-600">Daya tahan/kekuatan otot di bawah rata-rata, butuh program pembinaan kebugaran.</td>
+                            </tr>
+                            <tr class="bg-rose-50/50">
+                                <td class="p-3 border border-slate-200 font-bold text-rose-800">5 - 9</td>
+                                <td class="p-3 border border-slate-200 font-semibold text-rose-700">Sangat Kurang (SK)</td>
+                                <td class="p-3 border border-slate-200 text-xs text-slate-600">Perlu perhatian khusus, disarankan peningkatan aktivitas jasmani harian bertahap.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Student Detail Modal -->
+    <div id="student-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 id="modal-student-name" class="text-xl font-bold text-slate-900">Nama Siswa</h3>
+                    <p id="modal-student-sub" class="text-xs text-slate-500">Kelas 8A • Laki-laki</p>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="modal-student-content" class="space-y-4">
+                <!-- Content generated via JS -->
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-white font-semibold text-sm rounded-xl">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-out bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-message" class="text-sm font-medium">Pesan notifikasi</span>
+    </div>
+
+    <!-- Clear Data Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">Hapus Semua Data?</h3>
+            <p class="text-xs text-slate-500">Tindakan ini akan menghapus seluruh catatan kebugaran siswa yang tersimpan di browser ini.</p>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">Batal</button>
+                <button onclick="confirmClearAllData()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition shadow">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State storage
+        let students = [];
+        let fitnessChart = null;
+        let bmiChart = null;
+
+        function switchTab(tabName) {
+            const views = document.querySelectorAll('.tab-view');
+            const tabs = document.querySelectorAll('.nav-tab');
+
+            views.forEach(view => {
+                const shouldShow = view.id === `view-${tabName}`;
+                view.classList.toggle('hidden', !shouldShow);
+            });
+
+            tabs.forEach(tab => {
+                const isActive = tab.id === `tab-${tabName}`;
+                tab.classList.toggle('border-brand-600', isActive);
+                tab.classList.toggle('text-brand-600', isActive);
+                tab.classList.toggle('border-transparent', !isActive);
+                tab.classList.toggle('text-slate-500', !isActive);
+                tab.classList.toggle('hover:text-slate-800', !isActive);
+            });
+        }
+
+        // Initialize App
+        window.onload = function() {
+            // Set default date input to today
+            document.getElementById('input-tanggal').valueAsDate = new Date();
+            
+            // Load persistent data from LocalStorage
+            loadFromLocalStorage();
+
+            // Render initial views
+            updateDashboard();
+            renderStudentTable();
+            populateClassFilter();
+            initCharts();
+        };
+
+        // LocalStorage & Data Persistence Helpers
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('32sehat_students_data', JSON.stringify(students));
+            } catch (e) {
+                console.error('Gagal menyimpan ke LocalStorage', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('32sehat_students_data');
+                if (saved) {
+                    students = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Gagal memuat data dari LocalStorage', e);
+                students = [];
+            }
+        }
+
+        function exportJSONBackup() {
+            if (students.length === 0) {
+                showToast('Tidak ada data untuk dicadangkan!', 'rose');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(students, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `32SEHAT_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+            showToast('Cadangan data JSON berhasil diunduh!');
+        }
+
+        function importJSONBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        students = imported;
+                        saveToLocalStorage();
+                        populateClassFilter();
+                        renderStudentTable();
+                        updateDashboard();
+                        showToast(`${imported.length} data siswa berhasil dipulihkan!`);
+                    } else {
+                        showToast('Format file cadangan tidak valid!', 'rose');
+                    }
+                } catch (err) {
+                    showToast('Gagal membaca file backup JSON!', 'rose');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function openConfirmModal() {
+            if (students.length === 0) {
+                showToast('Data sudah kosong.', 'rose');
+                return;
+            }
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        function confirmClearAllData() {
+            students = [];
+            saveToLocalStorage();
+            populateClassFilter();
+            renderStudentTable();
+            updateDashboard();
+            closeConfirmModal();
+            showToast('Seluruh data berhasil dihapus!', 'rose');
+        }
+
+        // Live BMI & TKJI calculation preview during form filling
+        function liveCalculateScore() {
+            const tb = parseFloat(document.getElementById('input-tb').value);
+            const bb = parseFloat(document.getElementById('input-bb').value);
+            const bmiBadge = document.getElementById('live-bmi-badge');
+
+            if (tb > 0 && bb > 0) {
+                const bmi = (bb / ((tb/100) * (tb/100))).toFixed(1);
+                let cat = '';
+                if(bmi < 18.5) cat = 'Kurang';
+                else if(bmi <= 24.9) cat = 'Normal';
+                else if(bmi <= 29.9) cat = 'Berlebih';
+                else cat = 'Obesitas';
+
+                bmiBadge.textContent = `BMI: ${bmi} (${cat})`;
+                bmiBadge.className = `text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                    cat === 'Normal' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                }`;
+            } else {
+                bmiBadge.textContent = 'BMI: -';
+            }
+
+            // Estimate TKJI Category
+            const lari = parseFloat(document.getElementById('input-lari60').value) || 0;
+            const pushup = parseInt(document.getElementById('input-pushup').value) || 0;
+            const situp = parseInt(document.getElementById('input-situp').value) || 0;
+            const vj = parseInt(document.getElementById('input-verticaljump').value) || 0;
+
+            const tkjiBadge = document.getElementById('live-tkji-badge');
+            if(lari > 0 || pushup > 0 || situp > 0 || vj > 0) {
+                const totalScore = calculateTKJIScore({ lari60: lari, pushup: pushup, situp: situp, vj: vj });
+                const category = getTKJICategory(totalScore);
+                tkjiBadge.textContent = `Skor Estimated: ${totalScore} (${category.name})`;
+                tkjiBadge.className = `text-xs px-2.5 py-0.5 rounded-full font-bold ${category.bgClass} ${category.textClass}`;
+            } else {
+                tkjiBadge.textContent = 'Kategori: -';
+            }
+        }
+
+        // Helper TKJI Scoring logic
+        function calculateTKJIScore(data) {
+            let score = 0;
+            
+            // Lari 60m scoring simplified estimation
+            if (data.lari60 > 0) {
+                if (data.lari60 <= 7.2) score += 5;
+                else if (data.lari60 <= 8.4) score += 4;
+                else if (data.lari60 <= 9.6) score += 3;
+                else if (data.lari60 <= 11.0) score += 2;
+                else score += 1;
+            } else { score += 3; }
+
+            // Push up
+            if (data.pushup >= 30) score += 5;
+            else if (data.pushup >= 22) score += 4;
+            else if (data.pushup >= 14) score += 3;
+            else if (data.pushup >= 6) score += 2;
+            else score += 1;
+
+            // Sit up
+            if (data.situp >= 30) score += 5;
+            else if (data.situp >= 22) score += 4;
+            else if (data.situp >= 14) score += 3;
+            else if (data.situp >= 6) score += 2;
+            else score += 1;
+
+            // Vertical Jump
+            if (data.vj >= 50) score += 5;
+            else if (data.vj >= 40) score += 4;
+            else if (data.vj >= 30) score += 3;
+            else if (data.vj >= 20) score += 2;
+            else score += 1;
+
+            // Lari Jauh bonus score
+            score += 3; // base score for endurance run
+
+            return Math.min(25, Math.max(5, score));
+        }
+
+        function getTKJICategory(totalScore) {
+            if (totalScore >= 22) return { name: 'Sangat Baik', bgClass: 'bg-emerald-100', textClass: 'text-emerald-800' };
+            if (totalScore >= 18) return { name: 'Baik', bgClass: 'bg-blue-100', textClass: 'text-blue-800' };
+            if (totalScore >= 14) return { name: 'Sedang', bgClass: 'bg-amber-100', textClass: 'text-amber-800' };
+            if (totalScore >= 10) return { name: 'Kurang', bgClass: 'bg-orange-100', textClass: 'text-orange-800' };
+            return { name: 'Sangat Kurang', bgClass: 'bg-rose-100', textClass: 'text-rose-800' };
+        }
+
+        // Form Submit Handler
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const tb = parseFloat(document.getElementById('input-tb').value);
+            const bb = parseFloat(document.getElementById('input-bb').value);
+            const bmi = (bb / ((tb/100) * (tb/100))).toFixed(1);
+
+            const testData = {
+                lari60: parseFloat(document.getElementById('input-lari60').value) || 0,
+                pushup: parseInt(document.getElementById('input-pushup').value) || 0,
+                situp: parseInt(document.getElementById('input-situp').value) || 0,
+                vj: parseInt(document.getElementById('input-verticaljump').value) || 0,
+                lariJauhMin: parseInt(document.getElementById('input-larijauh-min').value) || 0,
+                lariJauhSec: parseInt(document.getElementById('input-larijauh-sec').value) || 0,
+            };
+
+            const totalScore = calculateTKJIScore(testData);
+            const category = getTKJICategory(totalScore);
+
+            const newStudent = {
+                id: 'STU-' + Date.now(),
+                nama: document.getElementById('input-nama').value.trim(),
+                nisn: document.getElementById('input-nisn').value.trim() || '-',
+                kelas: document.getElementById('input-kelas').value.trim().toUpperCase(),
+                jk: document.getElementById('input-jk').value,
+                usia: document.getElementById('input-usia').value,
+                tb: tb,
+                bb: bb,
+                bmi: bmi,
+                tests: testData,
+                totalScore: totalScore,
+                kategoriTKJI: category.name,
+                tanggal: document.getElementById('input-tanggal').value,
+                catatan: document.getElementById('input-catatan').value.trim() || '-'
+            };
+
+            students.unshift(newStudent);
+            saveToLocalStorage();
+            
+            showToast('Data kebugaran siswa berhasil disimpan!');
+            resetForm();
+            populateClassFilter();
+            renderStudentTable();
+            updateDashboard();
+            switchTab('students');
+        }
+
+        function resetForm() {
+            document.getElementById('fitness-form').reset();
+            document.getElementById('input-tanggal').valueAsDate = new Date();
+            document.getElementById('live-bmi-badge').textContent = 'BMI: -';
+            document.getElementById('live-bmi-badge').className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 text-slate-700';
+            document.getElementById('live-tkji-badge').textContent = 'Kategori: -';
+            document.getElementById('live-tkji-badge').className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 text-slate-700';
+        }
+
+        // Render Student Table
+        function renderStudentTable() {
+            const tbody = document.getElementById('student-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filterKelas = document.getElementById('filter-kelas').value;
+            const filterKategori = document.getElementById('filter-kategori').value;
+
+            document.getElementById('student-count-badge').textContent = students.length;
+
+            let filtered = students.filter(s => {
+                const matchSearch = s.nama.toLowerCase().includes(search) || s.nisn.toLowerCase().includes(search);
+                const matchKelas = filterKelas === 'ALL' || s.kelas === filterKelas;
+                const matchKategori = filterKategori === 'ALL' || s.kategoriTKJI === filterKategori;
+                return matchSearch && matchKelas && matchKategori;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            tbody.innerHTML = filtered.map(s => {
+                const category = getTKJICategory(s.totalScore);
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4">
+                            <div class="font-bold text-slate-800">${s.nama}</div>
+                            <div class="text-xs text-slate-400">NISN: ${s.nisn} • ${s.jk === 'L' ? 'Laki-laki' : 'Perempuan'} (${s.usia} thn)</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200">${s.kelas}</span>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-xs font-semibold text-slate-700">${s.tb} cm / ${s.bb} kg</div>
+                            <div class="text-[11px] font-bold text-slate-500">BMI: ${s.bmi}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-extrabold text-base text-slate-800">${s.totalScore}</span>
+                                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${category.bgClass} ${category.textClass}">
+                                    ${s.kategoriTKJI}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="text-xs text-slate-500 space-x-1">
+                                <span title="Lari 60m"><i class="fa-solid fa-person-running"></i> ${s.tests.lari60 || '-'}s</span> •
+                                <span title="Push Up"><i class="fa-solid fa-child-reaching"></i> ${s.tests.pushup}x</span> •
+                                <span title="Sit Up"><i class="fa-solid fa-person-arrow-up-from-line"></i> ${s.tests.situp}x</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="viewStudentModal('${s.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Lihat Detail">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button onclick="deleteStudent('${s.id}')" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition" title="Hapus Data">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Modal View Detail
+        function viewStudentModal(id) {
+            const s = students.find(item => item.id === id);
+            if (!s) return;
+
+            document.getElementById('modal-student-name').textContent = s.nama;
+            document.getElementById('modal-student-sub').textContent = `Kelas ${s.kelas} • ${s.jk === 'L' ? 'Laki-laki' : 'Perempuan'} (${s.usia} Tahun) • NISN: ${s.nisn}`;
+
+            const content = document.getElementById('modal-student-content');
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60 text-xs">
+                    <div><span class="text-slate-400">Tinggi Badan:</span> <span class="font-bold text-slate-700">${s.tb} cm</span></div>
+                    <div><span class="text-slate-400">Berat Badan:</span> <span class="font-bold text-slate-700">${s.bb} kg</span></div>
+                    <div><span class="text-slate-400">BMI:</span> <span class="font-bold text-slate-700">${s.bmi}</span></div>
+                    <div><span class="text-slate-400">Tanggal Tes:</span> <span class="font-bold text-slate-700">${s.tanggal}</span></div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-sm text-slate-800">Rincian Nilai Komponen Tes:</h4>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between p-2 bg-slate-100 rounded-lg">
+                            <span>1. Lari Cepat 60m</span>
+                            <span class="font-bold text-slate-800">${s.tests.lari60 || '-'} Detik</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-100 rounded-lg">
+                            <span>2. Push-Up / Gantung Siku</span>
+                            <span class="font-bold text-slate-800">${s.tests.pushup} Kali</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-100 rounded-lg">
+                            <span>3. Sit-Up / Baring Duduk</span>
+                            <span class="font-bold text-slate-800">${s.tests.situp} Kali</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-100 rounded-lg">
+                            <span>4. Loncat Tegak (Vertical Jump)</span>
+                            <span class="font-bold text-slate-800">${s.tests.vj} cm</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-100 rounded-lg">
+                            <span>5. Lari Jauh</span>
+                            <span class="font-bold text-slate-800">${s.tests.lariJauhMin || 0}m ${s.tests.lariJauhSec || 0}s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-brand-50 border border-brand-200 rounded-xl flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-brand-700 font-medium">Total Skor TKJI</div>
+                        <div class="text-xl font-extrabold text-brand-900">${s.totalScore} / 25</div>
+                    </div>
+                    <span class="px-3 py-1 bg-brand-600 text-white font-bold text-xs rounded-full">
+                        ${s.kategoriTKJI}
+                    </span>
+                </div>
+
+                ${s.catatan !== '-' ? `
+                    <div class="text-xs bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-800">
+                        <i class="fa-solid fa-comment-dots mr-1"></i> <strong>Catatan Guru:</strong> ${s.catatan}
+                    </div>
+                ` : ''}
+            `;
+
+            document.getElementById('student-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('student-modal').classList.add('hidden');
+        }
+
+        function deleteStudent(id) {
+            students = students.filter(s => s.id !== id);
+            saveToLocalStorage();
+            showToast('Data siswa berhasil dihapus');
+            renderStudentTable();
+            populateClassFilter();
+            updateDashboard();
+        }
+
+        function populateClassFilter() {
+            const select = document.getElementById('filter-kelas');
+            const currentVal = select.value;
+            const classes = [...new Set(students.map(s => s.kelas))].sort();
+
+            select.innerHTML = '<option value="ALL">Semua Kelas</option>' + 
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            select.value = currentVal;
+        }
+
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-kelas').value = 'ALL';
+            document.getElementById('filter-kategori').value = 'ALL';
+            renderStudentTable();
+        }
+
+        function initCharts() {
+            const ctxFitness = document.getElementById('fitnessChart').getContext('2d');
+            fitnessChart = new Chart(ctxFitness, {
+                type: 'bar',
+                data: {
+                    labels: ['Sangat Baik', 'Baik', 'Sedang', 'Kurang', 'Sangat Kurang'],
+                    datasets: [{
+                        label: 'Jumlah Siswa',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+
+            const ctxBMI = document.getElementById('bmiChart').getContext('2d');
+            bmiChart = new Chart(ctxBMI, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sangat Kurang', 'Normal', 'Kelebihan', 'Obesitas'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function updateDashboard() {
+            document.getElementById('stat-total-students').textContent = students.length;
+
+            if (students.length === 0) {
+                document.getElementById('stat-good-fitness').textContent = '0%';
+                document.getElementById('stat-avg-bmi').textContent = '-';
+                document.getElementById('stat-low-fitness').textContent = '0';
+                if (fitnessChart) {
+                    fitnessChart.data.datasets[0].data = [0, 0, 0, 0, 0];
+                    fitnessChart.update();
+                }
+                if (bmiChart) {
+                    bmiChart.data.datasets[0].data = [0, 0, 0, 0];
+                    bmiChart.update();
+                }
+                return;
+            }
+
+            const goodFitness = students.filter(s => s.kategoriTKJI === 'Sangat Baik' || s.kategoriTKJI === 'Baik').length;
+            const goodFitnessPct = Math.round((goodFitness / students.length) * 100);
+            document.getElementById('stat-good-fitness').textContent = `${goodFitnessPct}%`;
+
+            const lowFitness = students.filter(s => s.kategoriTKJI === 'Kurang' || s.kategoriTKJI === 'Sangat Kurang').length;
+            document.getElementById('stat-low-fitness').textContent = lowFitness;
+
+            const avgBmi = (students.reduce((acc, curr) => acc + parseFloat(curr.bmi), 0) / students.length).toFixed(1);
+            document.getElementById('stat-avg-bmi').textContent = avgBmi;
+
+            // Chart data updates
+            const fitnessCounts = {
+                'Sangat Baik': 0, 'Baik': 0, 'Sedang': 0, 'Kurang': 0, 'Sangat Kurang': 0
+            };
+            const bmiCounts = {
+                under: 0, normal: 0, over: 0, obese: 0
+            };
+
+            students.forEach(s => {
+                if (fitnessCounts[s.kategoriTKJI] !== undefined) {
+                    fitnessCounts[s.kategoriTKJI]++;
+                }
+                const bmiVal = parseFloat(s.bmi);
+                if (bmiVal < 18.5) bmiCounts.under++;
+                else if (bmiVal <= 24.9) bmiCounts.normal++;
+                else if (bmiVal <= 29.9) bmiCounts.over++;
+                else bmiCounts.obese++;
+            });
+
+            if (fitnessChart) {
+                fitnessChart.data.datasets[0].data = [
+                    fitnessCounts['Sangat Baik'],
+                    fitnessCounts['Baik'],
+                    fitnessCounts['Sedang'],
+                    fitnessCounts['Kurang'],
+                    fitnessCounts['Sangat Kurang']
+                ];
+                fitnessChart.update();
+            }
+
+            if (bmiChart) {
+                bmiChart.data.datasets[0].data = [
+                    bmiCounts.under, bmiCounts.normal, bmiCounts.over, bmiCounts.obese
+                ];
+                bmiChart.update();
+            }
+        }
+
+        function loadSampleData() {
+            const samples = [
+                { id: 'STU-101', nama: 'Andi Pratama', nisn: '0081122331', kelas: '8A', jk: 'L', usia: '14', tb: 168, bb: 58, bmi: '20.5', tests: { lari60: 8.1, pushup: 28, situp: 32, vj: 48, lariJauhMin: 4, lariJauhSec: 30 }, totalScore: 21, kategoriTKJI: 'Baik', tanggal: '2026-09-10', catatan: 'Atlit futsal sekolah' },
+                { id: 'STU-102', nama: 'Siti Rahma', nisn: '0081122332', kelas: '8A', jk: 'P', usia: '14', tb: 155, bb: 46, bmi: '19.1', tests: { lari60: 9.3, pushup: 18, situp: 25, vj: 38, lariJauhMin: 5, lariJauhSec: 15 }, totalScore: 18, kategoriTKJI: 'Baik', tanggal: '2026-09-10', catatan: '-' },
+                { id: 'STU-103', nama: 'Dewi Lestari', nisn: '0081122333', kelas: '8B', jk: 'P', usia: '14', tb: 150, bb: 62, bmi: '27.6', tests: { lari60: 11.2, pushup: 8, situp: 10, vj: 22, lariJauhMin: 7, lariJauhSec: 10 }, totalScore: 9, kategoriTKJI: 'Sangat Kurang', tanggal: '2026-09-11', catatan: 'Perlu latihan fisik rutin' },
+                { id: 'STU-104', nama: 'Rizky Hidayat', nisn: '0081122334', kelas: '8B', jk: 'L', usia: '14', tb: 172, bb: 64, bmi: '21.6', tests: { lari60: 7.1, pushup: 35, situp: 38, vj: 55, lariJauhMin: 4, lariJauhSec: 05 }, totalScore: 24, kategoriTKJI: 'Sangat Baik', tanggal: '2026-09-11', catatan: 'Performa sangat memuaskan' },
+                { id: 'STU-105', nama: 'Bambang Kurnia', nisn: '0081122335', kelas: '8A', jk: 'L', usia: '14', tb: 160, bb: 54, bmi: '21.1', tests: { lari60: 9.8, pushup: 16, situp: 18, vj: 32, lariJauhMin: 6, lariJauhSec: 00 }, totalScore: 15, kategoriTKJI: 'Sedang', tanggal: '2026-09-10', catatan: '-' }
+            ];
+
+            students = samples;
+            saveToLocalStorage();
+            showToast('5 data contoh siswa berhasil dimuat!');
+            populateClassFilter();
+            renderStudentTable();
+            updateDashboard();
+        }
+
+        function exportToCSV() {
+            if (students.length === 0) {
+                showToast('Tidak ada data siswa untuk diekspor!', 'rose');
+                return;
+            }
+
+            // UTF-8 BOM agar Excel mengenali karakter khusus & format secara otomatis
+            const BOM = '\uFEFF';
+            
+            // Header kolom terpisah lengkap untuk setiap item tes dan data antropometri
+            const headers = [
+                'No',
+                'Nama Siswa',
+                'NISN',
+                'Kelas',
+                'Jenis Kelamin',
+                'Usia (Thn)',
+                'Tinggi Badan (cm)',
+                'Berat Badan (kg)',
+                'Nilai BMI',
+                'Status Gizi',
+                'Lari 60m (Detik)',
+                'Push Up (Kali)',
+                'Sit Up (Kali)',
+                'Vertical Jump (cm)',
+                'Lari Jauh (Menit)',
+                'Lari Jauh (Detik)',
+                'Total Skor TKJI',
+                'Kategori Kebugaran TKJI',
+                'Tanggal Tes',
+                'Catatan Guru'
+            ];
+
+            // Menggunakan separator titik koma (;) agar Microsoft Excel otomatis memisahkannya ke kolom berbeda
+            let csvContent = BOM + 'sep=;\n' + headers.join(';') + '\n';
+
+            students.forEach((s, index) => {
+                // Menentukan teks Status Gizi berdasarkan nilai BMI
+                const bmiVal = parseFloat(s.bmi);
+                let bmiStatus = 'Normal';
+                if (bmiVal < 18.5) bmiStatus = 'Kurang (Underweight)';
+                else if (bmiVal <= 24.9) bmiStatus = 'Normal';
+                else if (bmiVal <= 29.9) bmiStatus = 'Kelebihan (Overweight)';
+                else bmiStatus = 'Obesitas';
+
+                // Fungsi pembersih karakter agar isi sel tidak merusak tabel CSV
+                const clean = (text) => `"${String(text ?? '').replace(/"/g, '""')}"`;
+
+                const row = [
+                    index + 1,
+                    clean(s.nama),
+                    clean(s.nisn),
+                    clean(s.kelas),
+                    clean(s.jk === 'L' ? 'Laki-laki' : 'Perempuan'),
+                    s.usia,
+                    s.tb,
+                    s.bb,
+                    s.bmi,
+                    clean(bmiStatus),
+                    s.tests.lari60 || 0,
+                    s.tests.pushup || 0,
+                    s.tests.situp || 0,
+                    s.tests.vj || 0,
+                    s.tests.lariJauhMin || 0,
+                    s.tests.lariJauhSec || 0,
+                    s.totalScore,
+                    clean(s.kategoriTKJI),
+                    clean(s.tanggal),
+                    clean(s.catatan)
+                ];
+
+                csvContent += row.join(';') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Laporan_Kebugaran_Siswa_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('File CSV berhasil diunduh dengan kolom terpisah rapi!');
+        }
+
+        function showToast(message, color = 'emerald') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.textContent = message;
+            if (color === 'rose') {
+                iconEl.className = 'fa-solid fa-circle-xmark text-rose-400';
+            } else {
+                iconEl.className = 'fa-solid fa-circle-check text-emerald-400';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
